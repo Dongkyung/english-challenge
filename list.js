@@ -13,6 +13,7 @@ import {
   logout,
   getSeason,
   getDayNumber,
+  getTodayRecording,
   CURRENT_SEASON_ID,
 } from "./shared.js";
 
@@ -88,7 +89,18 @@ async function init() {
   currentWeek = defaultWeek;
 
   if (!viewerIsAdmin) {
-    recordLink.hidden = participant.status === "eliminated";
+    const totalDays = totalWeeks * 7;
+    const inSeasonRange = todayDayNumber >= 1 && todayDayNumber <= totalDays;
+    let alreadySubmittedToday = false;
+    if (participant.status !== "eliminated" && inSeasonRange) {
+      try {
+        alreadySubmittedToday = !!(await getTodayRecording(viewerUid, todayDayNumber));
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    recordLink.hidden =
+      participant.status === "eliminated" || !inSeasonRange || alreadySubmittedToday;
   }
 
   try {

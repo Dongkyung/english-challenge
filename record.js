@@ -105,6 +105,7 @@ async function init() {
   // 오늘 이미 제출했다면 리스트로 돌려보냄 (직접 URL로 들어온 경우 대비)
   const today = await getTodayRecording(user.uid, dayNumber);
   if (today) {
+    alert("오늘은 이미 제출하셨습니다. 내일 다시 녹음할 수 있어요.");
     location.href = "list.html";
     return;
   }
