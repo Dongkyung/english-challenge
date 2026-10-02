@@ -472,3 +472,112 @@ body.list-page {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+body.list-page.has-player .list-screen {
+  padding-bottom: 150px;
+}
+
+/* ==================== 하단 고정 재생바 ==================== */
+
+.player-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.player-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.player-toggle {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.player-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.player-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.player-label {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-seek-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.player-time {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.player-seek {
+  flex: 1;
+  height: 4px;
+  accent-color: var(--color-primary);
+}
+
+.player-speed-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 640px;
+  margin: 10px auto 0;
+}
+
+.player-speed-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-right: 4px;
+}
+
+.speed-btn {
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.speed-btn.is-active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-text);
+}

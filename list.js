@@ -36,6 +36,18 @@ const listError = document.getElementById("list-error");
 const listLoading = document.getElementById("list-loading");
 const logoutBtn = document.getElementById("logout-btn");
 
+const playerBar = document.getElementById("player-bar");
+const playerToggle = document.getElementById("player-toggle");
+const playerToggleIcon = document.getElementById("player-toggle-icon");
+const playerLabel = document.getElementById("player-label");
+const playerSeek = document.getElementById("player-seek");
+const playerCurrentTime = document.getElementById("player-current-time");
+const playerDuration = document.getElementById("player-duration");
+const speedButtons = Array.from(document.querySelectorAll(".speed-btn"));
+
+const PLAY_ICON = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
+const PAUSE_ICON = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>`;
+
 // ==================== 상태 ====================
 
 let viewerIsAdmin = false;
@@ -49,6 +61,7 @@ let currentWeek = 1;
 
 let currentAudio = null;
 let currentButton = null;
+let currentRate = 1;
 
 logoutBtn.addEventListener("click", logout);
 
@@ -239,13 +252,14 @@ function renderRow(p) {
 
   const nameEl = document.createElement("span");
   nameEl.className = "participant-name";
+  const label = viewerIsAdmin ? p.nickname : p.displayName;
   if (viewerIsAdmin) {
     // admin에게는 항상 실제 닉네임을 보여주되, 공개/익명 설정에 따라 색을 다르게
-    nameEl.textContent = p.nickname;
+    nameEl.textContent = label;
     nameEl.classList.add(p.displayMode === "anonymous" ? "name-anonymous" : "name-public");
   } else {
     // publicProfiles 문서에는 이미 "익명" 또는 실제 닉네임이 확정되어 들어있음
-    nameEl.textContent = p.displayName;
+    nameEl.textContent = label;
   }
   row.appendChild(nameEl);
 
@@ -261,7 +275,9 @@ function renderRow(p) {
     cell.textContent = String(i + 1);
     if (recording) {
       cell.classList.add("has-recording");
-      cell.addEventListener("click", () => togglePlay(cell, recording.downloadURL));
+      cell.addEventListener("click", () =>
+        playTrack(cell, recording.downloadURL, `${label} · Day ${day}`)
+      );
     } else {
       cell.disabled = true;
     }
@@ -314,14 +330,26 @@ async function toggleElimination(p, btn, row) {
   }
 }
 
-function togglePlay(btn, url) {
+// ==================== 하단 고정 재생바 ====================
+
+function formatTime(seconds) {
+  if (!isFinite(seconds) || seconds < 0) seconds = 0;
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
+
+function setPlayerToggleIcon(isPlaying) {
+  playerToggleIcon.innerHTML = isPlaying ? PAUSE_ICON : PLAY_ICON;
+}
+
+function playTrack(btn, url, label) {
+  // 같은 트랙을 다시 눌렀으면 재생/일시정지만 토글
   if (currentAudio && currentButton === btn) {
     if (currentAudio.paused) {
       currentAudio.play();
-      btn.classList.add("is-playing");
     } else {
       currentAudio.pause();
-      btn.classList.remove("is-playing");
     }
     return;
   }
@@ -332,10 +360,72 @@ function togglePlay(btn, url) {
   }
 
   currentAudio = new Audio(url);
+  currentAudio.playbackRate = currentRate;
   currentButton = btn;
+  btn.classList.add("is-playing");
+
+  playerLabel.textContent = label;
+  playerBar.hidden = false;
+  document.body.classList.add("has-player");
+  playerSeek.value = "0";
+  playerCurrentTime.textContent = "0:00";
+  playerDuration.textContent = "0:00";
+  setPlayerToggleIcon(true);
+  updateSpeedButtons();
+
+  currentAudio.addEventListener("loadedmetadata", () => {
+    playerDuration.textContent = formatTime(currentAudio.duration);
+  });
+  currentAudio.addEventListener("timeupdate", () => {
+    if (isSeeking) return;
+    const pct = currentAudio.duration ? (currentAudio.currentTime / currentAudio.duration) * 1000 : 0;
+    playerSeek.value = String(pct);
+    playerCurrentTime.textContent = formatTime(currentAudio.currentTime);
+  });
+  currentAudio.addEventListener("play", () => setPlayerToggleIcon(true));
+  currentAudio.addEventListener("pause", () => setPlayerToggleIcon(false));
   currentAudio.addEventListener("ended", () => {
     btn.classList.remove("is-playing");
+    setPlayerToggleIcon(false);
   });
+
   currentAudio.play();
-  btn.classList.add("is-playing");
 }
+
+let isSeeking = false;
+
+playerToggle.addEventListener("click", () => {
+  if (!currentAudio) return;
+  if (currentAudio.paused) currentAudio.play();
+  else currentAudio.pause();
+});
+
+playerSeek.addEventListener("input", () => {
+  isSeeking = true;
+  if (currentAudio) {
+    playerCurrentTime.textContent = formatTime(
+      (Number(playerSeek.value) / 1000) * (currentAudio.duration || 0)
+    );
+  }
+});
+
+playerSeek.addEventListener("change", () => {
+  if (currentAudio && currentAudio.duration) {
+    currentAudio.currentTime = (Number(playerSeek.value) / 1000) * currentAudio.duration;
+  }
+  isSeeking = false;
+});
+
+function updateSpeedButtons() {
+  speedButtons.forEach((b) => {
+    b.classList.toggle("is-active", Number(b.dataset.rate) === currentRate);
+  });
+}
+
+speedButtons.forEach((b) => {
+  b.addEventListener("click", () => {
+    currentRate = Number(b.dataset.rate);
+    if (currentAudio) currentAudio.playbackRate = currentRate;
+    updateSpeedButtons();
+  });
+});
