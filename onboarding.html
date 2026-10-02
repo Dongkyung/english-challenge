@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>최초 설정 — Speaking Practice Challenge</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="auth-screen">
+    <section id="step1" class="auth-form" hidden>
+      <h2>1. 비밀번호 재설정</h2>
+      <p class="hint">처음 로그인하셨네요. 본인만 아는 비밀번호로 바꿔주세요.</p>
+      <form id="step1-form">
+        <label for="new-password">새 비밀번호</label>
+        <input id="new-password" type="password" required minlength="6" autocomplete="new-password" />
+
+        <label for="new-password-confirm">새 비밀번호 확인</label>
+        <input id="new-password-confirm" type="password" required minlength="6" autocomplete="new-password" />
+
+        <button type="submit">다음</button>
+        <p id="step1-error" class="error-msg" hidden></p>
+      </form>
+    </section>
+
+    <section id="step2" class="auth-form" hidden>
+      <h2>2. 등급 및 표시 설정</h2>
+      <p class="hint">이번 시즌 동안 변경할 수 없으니 신중히 선택해주세요.</p>
+      <form id="step2-form">
+        <label for="cefr-level">SmallTalk2Me에서 확인한 본인 등급</label>
+        <select id="cefr-level" required>
+          <option value="" disabled selected>선택하세요</option>
+          <option value="A1">A1 (Beginner)</option>
+          <option value="A2">A2 (Elementary)</option>
+          <option value="B1">B1 (Intermediate)</option>
+          <option value="B2">B2 (Upper-Intermediate)</option>
+          <option value="C1">C1 (Advanced)</option>
+          <option value="C2">C2 (Proficient)</option>
+        </select>
+
+        <fieldset class="radio-group">
+          <legend>리스트 화면에 내 이름을 어떻게 표시할까요?</legend>
+          <label class="radio-option">
+            <input type="radio" name="display-mode" value="nickname" />
+            닉네임 공개
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="display-mode" value="anonymous" />
+            익명으로 표시
+          </label>
+        </fieldset>
+
+        <button type="submit">시작하기</button>
+        <p id="step2-error" class="error-msg" hidden></p>
+      </form>
+    </section>
+  </main>
+  <script type="module" src="onboarding.js"></script>
+</body>
+</html>

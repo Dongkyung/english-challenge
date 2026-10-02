@@ -1,1 +1,25 @@
-준비중
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>로그인 — Speaking Practice Challenge</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="auth-screen">
+    <h1 class="app-title">Speaking Practice<br />Challenge</h1>
+    <form id="login-form" class="auth-form">
+      <label for="nickname">닉네임</label>
+      <input id="nickname" type="text" autocomplete="username" autocapitalize="none" required />
+
+      <label for="password">비밀번호</label>
+      <input id="password" type="password" autocomplete="current-password" required />
+
+      <button type="submit" id="login-btn">로그인</button>
+      <p id="error-msg" class="error-msg" hidden></p>
+    </form>
+  </main>
+  <script type="module" src="index.js"></script>
+</body>
+</html>

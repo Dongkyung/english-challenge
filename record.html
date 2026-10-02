@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>오늘의 녹음 — Speaking Practice Challenge</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body class="record-page">
+  <main class="record-screen">
+    <div>
+      <p class="record-day-label" id="day-label"></p>
+      <p class="record-instruction">
+        오늘의 스피킹 과제를 녹음해주세요.<br />
+        최소 1분, 최대 5분까지 녹음할 수 있어요.
+      </p>
+    </div>
+
+    <div class="mic-stage">
+      <button id="mic-button" class="mic-button" type="button" aria-label="녹음 시작">
+        <span id="mic-icon-slot" class="mic-icon-pulse"></span>
+      </button>
+    </div>
+
+    <div class="record-controls">
+      <div id="timer-display" class="timer-display" hidden>00:00</div>
+
+      <div id="progress-track" class="progress-track" hidden>
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+      <p id="progress-caption" class="progress-caption" hidden></p>
+
+      <div id="recording-buttons" class="button-row" hidden>
+        <button id="cancel-btn" type="button">취소</button>
+        <button id="complete-btn" class="btn-complete" type="button" disabled>완료</button>
+      </div>
+
+      <div id="preview-buttons" hidden>
+        <div class="button-row">
+          <button id="retry-btn" type="button">다시 녹음</button>
+        </div>
+        <button id="submit-btn" class="btn-submit" type="button">완료하기</button>
+      </div>
+
+      <p id="record-error" class="error-msg" hidden></p>
+    </div>
+  </main>
+  <script type="module" src="record.js"></script>
+</body>
+</html>
