@@ -1,0 +1,96 @@
+rules_version = '2';
+
+// ============================================================
+// Speaking Practice Challenge - Firestore 보안 규칙
+//
+// 적용 전 필수 작업:
+// 1. setup-participants.js 실행 후 콘솔에 출력된 admin UID를
+//    아래 REPLACE_WITH_ADMIN_UID 자리에 붙여넣을 것
+// 2. Firebase 에뮬레이터(firebase emulators:start)로 먼저 테스트 후 배포 권장
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------- 공통 헬퍼 함수 --------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      // setup-participants.js 실행 후 출력된 admin UID로 교체
+      return isSignedIn() && request.auth.uid == 'REPLACE_WITH_ADMIN_UID';
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isActiveParticipant(uid) {
+      return get(/databases/$(database)/documents/participants/$(uid)).data.status == 'active';
+    }
+
+    // -------- seasons: 시즌 메타데이터 --------
+    // 읽기: 로그인한 누구나 (주차 계산에 필요)
+    // 쓰기: 콘솔/Admin SDK로만 관리 (setup-participants.js 전용)
+    match /seasons/{seasonId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // -------- participants: 참가자 프로필/상태 (실명 + 공개/익명 설정 포함, 비공개) --------
+    // 읽기: 본인과 admin만. 실명(nickname)과 displayMode가 여기 있어서,
+    //   다른 참가자에게는 절대 노출되면 안 됨 (익명 설정의 실효성이 여기 달려 있음).
+    //   다른 참가자가 봐야 하는 정보는 publicProfiles에 별도로 복제해 둠.
+    match /participants/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+
+      // 본인: 온보딩 관련 필드(cefrLevel, displayMode, onboarded, 비밀번호 재등록 등)만 수정 가능
+      //   status, eliminatedAt은 절대 본인이 건드릴 수 없도록 차단
+      allow update: if isOwner(uid)
+                    && !('status' in request.resource.data.diff(resource.data).affectedKeys())
+                    && !('eliminatedAt' in request.resource.data.diff(resource.data).affectedKeys());
+
+      // admin: 탈락/재참여 처리를 위해 status, eliminatedAt 변경 가능
+      allow update: if isAdmin();
+
+      // 계정 생성/삭제는 setup-participants.js(Admin SDK)에서만 수행 → 클라이언트에서는 금지
+      allow create, delete: if false;
+    }
+
+    // -------- publicProfiles: 리스트 화면에서 "서로에게" 보여줄 공개용 사본 --------
+    // 실명이 아니라 표시용 이름(displayName)만 들어있음 — 익명 설정이면 온보딩 시점에
+    // 본인이 직접 "익명"이라는 문자열을 써넣고, 그 뒤로는 실명과 연결할 방법이 없음.
+    match /publicProfiles/{uid} {
+      allow read: if isSignedIn();
+
+      // 온보딩 때 본인이 1회 생성. 이후 cefrLevel/displayName 재수정 불가(시즌 중 고정 규칙과 동일).
+      allow create: if isOwner(uid) && !exists(/databases/$(database)/documents/publicProfiles/$(uid));
+
+      // 탈락/재참여 시 status만 admin이 동기화
+      allow update: if isAdmin()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+
+      allow delete: if false;
+    }
+
+    // -------- recordings: 일자별 음성 녹음 --------
+    // 문서 ID 규칙: {uid}_day{dayNumber}  예) abc123_day5
+    match /recordings/{recordingId} {
+      // 읽기: 로그인한 누구나 (다른 참가자의 녹음도 들을 수 있어야 함)
+      allow read: if isSignedIn();
+
+      // 생성: 본인 소유 문서만, 문서 ID 형식 검증, 이미 존재하면 재생성 불가(하루 1회 강제),
+      //       탈락자는 생성 자체가 불가
+      allow create: if isSignedIn()
+                    && request.resource.data.uid == request.auth.uid
+                    && recordingId.matches(request.auth.uid + '_day[0-9]+')
+                    && !exists(/databases/$(database)/documents/recordings/$(recordingId))
+                    && isActiveParticipant(request.auth.uid);
+
+      // 한번 제출된 녹음은 수정/삭제 불가 (완료 후 불변)
+      allow update, delete: if false;
+    }
+  }
+}

@@ -1,7 +1,7 @@
 import { updatePassword } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import { doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { db } from "./firebase-config.js";
-import { requireLogin, routeToCurrentStep } from "./shared.js";
+import { requireLogin, routeToCurrentStep, isAdmin } from "./shared.js";
 
 let currentUser = null;
 let currentParticipant = null;
@@ -17,6 +17,10 @@ init();
 
 async function init() {
   const { user, participant } = await requireLogin();
+  if (isAdmin(user.uid)) {
+    location.href = "list.html";
+    return;
+  }
   // 이미 온보딩을 끝낸 사람이 URL로 직접 들어오면 원래 가야 할 화면으로 돌려보냄
   if (participant.onboarded) {
     await routeToCurrentStep(user, participant);
@@ -75,6 +79,17 @@ step2Form.addEventListener("submit", async (e) => {
       displayMode,
       onboarded: true,
     });
+
+    // 다른 참가자들이 보게 될 "공개용 사본" — 익명이면 실명 대신 "익명"이라는
+    // 문자열 자체를 저장해서, 이후로는 이 문서만 봐서는 실명을 알아낼 방법이 없게 함.
+    const displayName = displayMode === "anonymous" ? "익명" : currentParticipant.nickname;
+    await setDoc(doc(db, "publicProfiles", currentUser.uid), {
+      displayName,
+      cefrLevel,
+      status: currentParticipant.status || "active",
+      seasonId: currentParticipant.seasonId,
+    });
+
     currentParticipant.onboarded = true;
     currentParticipant.cefrLevel = cefrLevel;
     currentParticipant.displayMode = displayMode;

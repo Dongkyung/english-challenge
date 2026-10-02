@@ -5,6 +5,7 @@ import {
   CURRENT_SEASON_ID,
   getParticipant,
   routeToCurrentStep,
+  isAdmin,
 } from "./shared.js";
 
 const form = document.getElementById("login-form");
@@ -19,10 +20,18 @@ form.addEventListener("submit", async (e) => {
 
   const nickname = document.getElementById("nickname").value;
   const password = document.getElementById("password").value;
-  const email = nicknameToEmail(CURRENT_SEASON_ID, nickname);
+  // admin은 실제 이메일로 로그인합니다(닉네임 입력칸에 이메일을 그대로 입력).
+  // 그 외에는 닉네임 → 내부용 이메일로 변환해서 로그인합니다.
+  const email = nickname.includes("@") ? nickname.trim() : nicknameToEmail(CURRENT_SEASON_ID, nickname);
 
   try {
     const cred = await signInWithEmailAndPassword(auth, email, password);
+
+    if (isAdmin(cred.user.uid)) {
+      location.href = "list.html";
+      return;
+    }
+
     const participant = await getParticipant(cred.user.uid);
     if (!participant) {
       throw new Error("참가자 정보를 찾을 수 없습니다.");

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>녹음 리스트 — Speaking Practice Challenge</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body class="list-page">
+  <main class="list-screen">
+    <header class="list-header">
+      <h1 class="list-title">Speaking Practice Challenge</h1>
+      <button id="logout-btn" class="link-btn" type="button">로그아웃</button>
+    </header>
+
+    <div class="list-toolbar">
+      <label for="week-select" class="toolbar-label">주차</label>
+      <select id="week-select"></select>
+
+      <a id="record-link" class="record-link-btn" href="record.html" hidden>오늘의 녹음하기</a>
+    </div>
+
+    <p id="list-error" class="error-msg" hidden></p>
+    <p id="list-loading" class="hint">불러오는 중...</p>
+
+    <div id="list-content" class="list-content"></div>
+  </main>
+  <script type="module" src="list.js"></script>
+</body>
+</html>
